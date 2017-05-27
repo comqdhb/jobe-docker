@@ -1,0 +1,6 @@
+#!/bin/bash
+
+ufw default reject outgoing 
+ufw allow in proto tcp to any port 80 
+ufw enable
+apachectl -D FOREGROUND

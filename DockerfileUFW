@@ -1,0 +1,36 @@
+FROM debian:stretch
+
+RUN apt-get update && \  
+    apt-get -qy install apache2 php libapache2-mod-php php-mcrypt\
+      php-cli octave nodejs\
+      git python3 build-essential openjdk-8-jre openjdk-8-jdk python3-pip\
+      fp-compiler pylint acl sudo ufw
+
+RUN pylint --reports=no --generate-rcfile > /etc/pylintrc
+
+RUN cd /var/www/html && sudo git clone https://github.com/trampgeek/jobe.git && apache2ctl start && cd jobe && sudo ./install
+
+RUN chmod o-r /var/www/html/jobe && chmod o-r /var/www/html 
+
+RUN sudo ufw default reject outgoing && \
+	sudo ufw allow out proto tcp to 147.197.236.217 port 80,443 && \
+	sudo ufw allow in 22/tcp && \
+	sudo ufw allow in proto tcp to any port 80 from 147.197.236.217 && \
+	sudo ufw enable  
+
+# Manually set up the apache environment variables
+ENV APACHE_RUN_USER www-data
+ENV APACHE_RUN_GROUP www-data
+ENV APACHE_LOG_DIR /var/log/apache2
+ENV APACHE_LOCK_DIR /var/lock/apache2
+ENV APACHE_PID_FILE /var/run/apache2.pid
+
+# Expose apache.
+EXPOSE 80
+
+
+
+WORKDIR /home/jobe/  
+
+CMD ["apachectl", "-D", "FOREGROUND"]
+#ENTRYPOINT ["apachectl"] 
